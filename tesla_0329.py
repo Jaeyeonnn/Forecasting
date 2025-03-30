@@ -18,7 +18,8 @@ def calculate_r_squared(actual, predicted):
 # Data loading and preprocessing (using st.cache_data)
 @st.cache_data
 def load_data():
-    df = pd.read_csv('/users/jl/downloads/Sample_Data.csv')
+    file_url = "https://github.com/jaeyeonnn/Forecasting/Sample_Data.csv"
+    df = pd.read_csv(file_url)
     # Convert 'Date' column to datetime format
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     return df
