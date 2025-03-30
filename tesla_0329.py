@@ -8,6 +8,8 @@ from datetime import datetime
 from sklearn.metrics import r2_score
 from PIL import Image
 import plotly.graph_objects as go
+import requests
+from io import BytesIO
 
 # Calculate R-squared
 def calculate_r_squared(actual, predicted):
@@ -339,7 +341,10 @@ def plot_yearly_sales_comparison(df, sku_id, year):
 
 # Dashboard UI setup
 def create_dashboard():
-    image = Image.open('/users/jl/downloads/tesla-gallery-logos/black.png') 
+    image_url = "https://github.com/jaeyeonnn/Forecasting/raw/main/05_0x0-Tesla_Wordmark_20_Black.png"
+    
+    response = requests.get(image_url)
+    img = Image.open(BytesIO(response.content))
     st.image(image, use_column_width=True)  
     st.title('Demand Planning Dashboard (ARIMA Model)')
 
