@@ -342,10 +342,9 @@ def plot_yearly_sales_comparison(df, sku_id, year):
 # Dashboard UI setup
 def create_dashboard():
     image_url = "https://github.com/jaeyeonnn/Forecasting/raw/main/05_0x0-Tesla_Wordmark_20_Black.png"
-    
     response = requests.get(image_url)
     img = Image.open(BytesIO(response.content))
-    st.image(image, use_column_width=True)  
+    st.image(img, use_column_width=True)  
     st.title('Demand Planning Dashboard (ARIMA Model)')
 
     df = load_data()
