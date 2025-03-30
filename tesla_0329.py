@@ -174,6 +174,14 @@ def display_monthly_comparison_table(sku_data_test, forecast, bias, mape, foreca
     st.markdown("### **Monthly Comparison of Forecast and Actual Sales (Jan - Jun 2024):**")
     st.table(comparison_df)
 
+# SMAPE Calculation
+def calculate_smape(actual, predicted):
+    denominator = (np.abs(actual) + np.abs(predicted)) / 2
+    diff = np.abs(actual - predicted) / denominator
+    diff[denominator == 0] = 0  # Handle case where both actual and predicted are zero
+    return np.mean(diff) * 100 
+
+
 # Display lag-based model performance comparison
 def display_lag_performance_table(df, sku_id):
     lag_results = []
@@ -191,15 +199,17 @@ def display_lag_performance_table(df, sku_id):
         if not np.isnan(accuracy) and accuracy > 100:
             accuracy = 0
         
-        # Format accuracy and MAPE as percentage, handle inf/NaN
+        smape = calculate_smape(sku_data_test['Weekly_Sales'], sku_data_test['Model Forecast'])
+
+        # Format accuracy and SMAPE as percentage, handle inf/NaN
         accuracy_percentage = f"{accuracy:.2f}%" if not np.isnan(accuracy) else "NA"
-        mape_percentage = f"{mape:.2f}%" if not np.isnan(mape) and not np.isinf(mape) else "NA"
+        smape_percentage = f"{mape:.2f}%" if not np.isnan(mape) and not np.isinf(mape) else "NA"
         
         # Append the results with new accuracy calculation
-        lag_results.append([lag_months, mae, mape_percentage, accuracy_percentage, r_squared])
+        lag_results.append([lag_months, mae, smape_percentage, accuracy_percentage, r_squared])
 
     # Convert lag_results to DataFrame
-    lag_performance_df = pd.DataFrame(lag_results, columns=['Lag (Months)', 'MAE', 'MAPE(%)', 'Accuracy(%)', 'R-squared'])
+    lag_performance_df = pd.DataFrame(lag_results, columns=['Lag (Months)', 'MAE', 'SMAPE(%)', 'Accuracy(%)', 'R-squared'])
 
     # Find the lag with the lowest MAE
     best_lag = lag_performance_df.loc[lag_performance_df['MAE'].idxmin()]
@@ -249,6 +259,9 @@ def display_metric_explanations():
     st.sidebar.write("""
         **MAE (Mean Absolute Error):** 
         - The average of the absolute differences between predicted and actual sales. A lower MAE means better prediction accuracy.
+                     
+        **SMAPE (Symmetric Mean Absolute Percentage Error):**
+        - SMAPE measures the accuracy of a forecast by calculating the percentage difference between the predicted and actual sales. It is similar to MAPE but takes the average of the absolute differences between the actual and predicted values, normalized by the sum of their absolute values. SMAPE helps avoid issues with very small actual values and provides a more balanced error measure. A lower SMAPE indicates better accuracy, with 0% being a perfect prediction.
                      
         **MAPE (Mean Absolute Percentage Error):** 
         - The average of the absolute percentage differences between predicted and actual sales. A lower MAPE indicates better prediction accuracy. It is more useful for comparing the accuracy of models across different scales. MAPE is computed by taking the absolute difference between actual and predicted values, dividing it by the actual value, and converting it into a percentage. 
