@@ -11,9 +11,9 @@ import plotly.graph_objects as go
 import requests
 from io import BytesIO
 
-# Calculate R-squared
-def calculate_r_squared(actual, predicted):
-    return r2_score(actual, predicted)
+# Calculate AIC (Akaike Information Criterion)
+def calculate_aic(model_fit):
+    return model_fit.aic
 
 # Data loading and preprocessing (using st.cache_data)
 @st.cache_data
@@ -74,11 +74,11 @@ def forecast_sales_arima(df, sku_id, forecast_horizon=6, lag_months=3):
     mae = mean_absolute_error(sku_data_test['Weekly_Sales'], sku_data_test['Model Forecast'])
     rmse = np.sqrt(mse)  # Root Mean Squared Error
     bias = (forecast - sku_data_test['Weekly_Sales']).mean()
-    r_squared = calculate_r_squared(sku_data_test['Weekly_Sales'], sku_data_test['Model Forecast'])
+    aic = calculate_aic(model_fit) 
     mape = np.mean(np.abs((sku_data_test['Weekly_Sales'] - sku_data_test['Model Forecast']) / sku_data_test['Weekly_Sales'])) * 100
     forecast_error = sku_data_test['Model Forecast'] - sku_data_test['Weekly_Sales']
 
-    return forecast, mse, mae, rmse, bias, r_squared, mape, forecast_error, sku_data_test, sku_data_train_lag
+    return forecast, mse, mae, rmse, bias, aic, mape, forecast_error, sku_data_test, sku_data_train_lag
 
 # KPI calculation function (using ARIMA)
 def calculate_kpis(df, sku_id, lag_months):
@@ -187,7 +187,7 @@ def display_lag_performance_table(df, sku_id):
     lag_results = []
     
     for lag_months in range(2, 13):
-        mse, mae, rmse, bias, r_squared, mape, forecast_error, forecast, sku_data_test, _ = calculate_kpis(df, sku_id, lag_months)
+        mse, mae, rmse, bias, aic, mape, forecast_error, forecast, sku_data_test, _ = calculate_kpis(df, sku_id, lag_months)
         
         actual = sku_data_test['Weekly_Sales']
         predicted = sku_data_test['Model Forecast']
@@ -206,10 +206,10 @@ def display_lag_performance_table(df, sku_id):
         smape_percentage = f"{mape:.2f}%" if not np.isnan(mape) and not np.isinf(mape) else "NA"
         
         # Append the results with new accuracy calculation
-        lag_results.append([lag_months, mae, smape_percentage, accuracy_percentage, r_squared])
+        lag_results.append([lag_months, mae, smape_percentage, accuracy_percentage, aic])
 
     # Convert lag_results to DataFrame
-    lag_performance_df = pd.DataFrame(lag_results, columns=['Lag (Months)', 'MAE', 'SMAPE(%)', 'Accuracy(%)', 'R-squared'])
+    lag_performance_df = pd.DataFrame(lag_results, columns=['Lag (Months)', 'MAE', 'SMAPE(%)', 'Accuracy(%)', 'AIC'])
 
     # Find the lag with the lowest MAE
     best_lag = lag_performance_df.loc[lag_performance_df['MAE'].idxmin()]
@@ -272,9 +272,8 @@ def display_metric_explanations():
         **Accuracy(%):**             
         - Accuracy measures how much the predicted values deviate from the actual values in percentage terms. 
 
-        **R-squared (R²):** 
-        - The proportion of the variance in the dependent variable that is predictable from the independent variable(s). A higher R² indicates that the model explains a large portion of the variance in the data.
-
+        **AIC (Akaike Information Criterion):** 
+        - AIC is a measure used to evaluate and compare statistical models. It helps to determine which model best balances fit and complexity. Lower AIC is better: When comparing multiple models, the lowest AIC indicates the best trade-off between model fit and complexity.
     """)
 import plotly.graph_objects as go
 
